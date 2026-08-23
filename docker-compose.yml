@@ -23,6 +23,15 @@ services:
     depends_on:
       - mongodb-dev
 
+  shopping-service:
+    build:
+      context: ./shopping
+    ports:
+      - "3003:3003"
+    environment:
+      - PORT=3003
+      - APP_SECRET=jg_secret_key_super_secreta_123
+
   mongodb-dev:
     image: mongo:latest
     ports:
