@@ -20,11 +20,11 @@ class CustomerRepository {
   }
 
   async FindCustomer({ email }) {
-        return CustomerModel.findOne({ email });
+        return this.CustomerModel.findOne({ email });
     }
 
     async AddNewAddress(customerId, { street, postalCode, city, country }) {
-        const customer = await CustomerModel.findById(customerId);
+        const customer = await this.CustomerModel.findById(customerId);
 
         if (!customer) {
             throw new BadRequestError('Customer not found');
@@ -38,16 +38,16 @@ class CustomerRepository {
     }
 
     async GetProfile(customerId) {
-        return CustomerModel.findById(customerId).populate('address');
+        return this.CustomerModel.findById(customerId).populate('address');
     }
 
     async GetWishList(customerId) {
-        const customer = await CustomerModel.findById(customerId);
+        const customer = await this.CustomerModel.findById(customerId);
         return customer.wishlist;
     }
 
     async AddToWishlist(customerId, product) {
-        const customer = await CustomerModel.findById(customerId);
+        const customer = await this.CustomerModel.findById(customerId);
         const productId = product._id.toString();
 
         if (!customer.wishlist.some((item) => item._id === productId)) {
@@ -59,7 +59,7 @@ class CustomerRepository {
     }
 
     async RemoveFromWishlist(customerId, productId) {
-        const customer = await CustomerModel.findById(customerId);
+        const customer = await this.CustomerModel.findById(customerId);
         customer.wishlist = customer.wishlist.filter((item) => item._id !== productId);
         await customer.save();
 
@@ -67,7 +67,7 @@ class CustomerRepository {
     }
 
     async AddToCart(customerId, product, qty) {
-        const customer = await CustomerModel.findById(customerId);
+        const customer = await this.CustomerModel.findById(customerId);
         const productId = product._id.toString();
         const existingItem = customer.cart.find((item) => item.product._id === productId);
 
@@ -82,7 +82,7 @@ class CustomerRepository {
     }
 
     async RemoveFromCart(customerId, productId) {
-        const customer = await CustomerModel.findById(customerId);
+        const customer = await this.CustomerModel.findById(customerId);
         customer.cart = customer.cart.filter((item) => item.product._id !== productId);
         await customer.save();
 
@@ -90,7 +90,7 @@ class CustomerRepository {
     }
 
     async GetCart(customerId) {
-        const customer = await CustomerModel.findById(customerId);
+        const customer = await this.CustomerModel.findById(customerId);
 
         if (!customer) {
             throw new BadRequestError('Customer not found');
@@ -100,7 +100,7 @@ class CustomerRepository {
     }
 
     async PlaceOrder(customerId, order) {
-        const customer = await CustomerModel.findById(customerId);
+        const customer = await this.CustomerModel.findById(customerId);
 
         if (!customer) {
             throw new BadRequestError('Customer not found');
