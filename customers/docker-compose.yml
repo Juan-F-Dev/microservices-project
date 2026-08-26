@@ -1,0 +1,34 @@
+services:
+  customer-service:
+      container_name: c-customer
+      build: .
+      restart: unless-stopped
+      ports:
+        - "8001:8001"
+      environment:
+        - DB_URL=mongodb://customer-db:27017/customers
+        - PORT=8001
+        - APP_SECRET=jg_secret_key_super_secreta_123
+      volumes:
+        - .:/app
+        - /app/node_modules
+      depends_on:
+        customer-db:
+          condition: service_healthy
+
+  customer-db:
+    container_name: c-customer-db
+    image: mongo:7
+    healthcheck:
+      test: [ "CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    ports:
+      - "27019:27017"
+    volumes:
+      - customer-data:/data/db
+
+volumes:
+  customer-data:

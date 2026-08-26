@@ -1,0 +1,34 @@
+services:
+  shopping-service:
+      container_name: c-shopping
+      build: .
+      restart: unless-stopped
+      ports:
+        - "8003:8003"
+      environment:
+        - DB_URL=mongodb://shopping-db:27017/shopping
+        - PORT=8003
+        - APP_SECRET=jg_secret_key_super_secreta_123
+      volumes:
+        - .:/app
+        - /app/node_modules
+      depends_on:
+        shopping-db:
+          condition: service_healthy
+
+  shopping-db:
+    container_name: c-shopping-db
+    image: mongo:7
+    healthcheck:
+      test: [ "CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    ports:
+      - "27021:27017"
+    volumes:
+      - shopping-data:/data/db
+
+volumes:
+  shopping-data:
