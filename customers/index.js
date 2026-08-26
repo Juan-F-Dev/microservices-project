@@ -11,6 +11,9 @@ const CustomerController = require('./src/controllers/customer.controller');
 const UserAuth = require('./src/middlewares/auth');
 
 const app = express();
+const PORT = process.env.PORT || 3002;
+const DB_URL = process.env.DB_URL || 'mongodb://localhost:27017/customers';
+
 app.use(express.json());
 app.use(cors());
 
@@ -23,9 +26,10 @@ app.post('/customer/login', controller.signIn);
 app.post('/customer/address', UserAuth, controller.addNewAddress);
 app.get('/customer/profile', UserAuth, controller.getProfile);
 
-mongoose.connect('mongodb://mongodb-dev:27017/car_sales_db')
+
+mongoose.connect(DB_URL)
     .then(() => {
         console.log('Database connected');
-        app.listen(3001, () => console.log('Customer service running on port 3001'));
+        app.listen(PORT, () => console.log(`Customer service running on port ${PORT}`));
     })
     .catch(err => console.error(err));

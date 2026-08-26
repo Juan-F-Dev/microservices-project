@@ -10,6 +10,9 @@ const ProductController = require('./src/controllers/product.controller');
 const UserAuth = require('./src/middlewares/auth');
 
 const app = express();
+const PORT = process.env.PORT || 3002;
+const DB_URL = process.env.DB_URL || 'mongodb://localhost:27017/products';
+
 app.use(express.json());
 app.use(cors());
 
@@ -27,9 +30,9 @@ app.put('/cart', UserAuth, controller.addToCart);
 app.delete('/cart/:id', UserAuth, controller.removeFromCart);
 
 // Conexión a DB y levantamiento del server
-mongoose.connect('mongodb://mongodb-dev:27017/car_sales_db')
+mongoose.connect(DB_URL)
     .then(() => {
         console.log('Database connected');
-        app.listen(3002, () => console.log('Products service running on port 3002'));
+        app.listen(PORT, () => console.log(`Products service running on port ${PORT}`));
     })
     .catch(err => console.error(err));
