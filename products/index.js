@@ -7,10 +7,9 @@ const ProductModel = require('./src/models/Product');
 const ProductRepository = require('./src/repositories/product.repository');
 const ProductService = require('./src/services/product.service');
 const ProductController = require('./src/controllers/product.controller');
-const UserAuth = require('./src/middlewares/auth');
 
 const app = express();
-const PORT = process.env.PORT || 3002;
+const PORT = process.env.PORT || 8002;
 const DB_URL = process.env.DB_URL || 'mongodb://localhost:27017/products';
 
 app.use(express.json());
@@ -24,12 +23,7 @@ const controller = new ProductController(service);
 // Rutas
 app.get('/', controller.getProducts);
 app.get('/:id', controller.getProductById);
-app.put('/wishlist', UserAuth, controller.addToWishlist);
-app.delete('/wishlist/:id', UserAuth, controller.removeFromWishlist);
-app.put('/cart', UserAuth, controller.addToCart);
-app.delete('/cart/:id', UserAuth, controller.removeFromCart);
 
-// Conexión a DB y levantamiento del server
 mongoose.connect(DB_URL)
     .then(() => {
         console.log('Database connected');
