@@ -11,7 +11,7 @@ const CustomerController = require('./src/controllers/customer.controller');
 const UserAuth = require('./src/middlewares/auth');
 
 const app = express();
-const PORT = process.env.PORT || 3002;
+const PORT = process.env.PORT || 8001;
 const DB_URL = process.env.DB_URL || 'mongodb://localhost:27017/customers';
 
 app.use(express.json());
@@ -21,11 +21,13 @@ const repository = new CustomerRepository(CustomerModel, AddressModel);
 const service = new CustomerService(repository);
 const controller = new CustomerController(service);
 
-app.post('/customer/signup', controller.signUp);
-app.post('/customer/login', controller.signIn);
-app.post('/customer/address', UserAuth, controller.addNewAddress);
-app.get('/customer/profile', UserAuth, controller.getProfile);
-
+app.post('/signup', controller.signUp);
+app.post('/login', controller.signIn);
+app.post('/address', UserAuth, controller.addNewAddress);
+app.get('/profile', UserAuth, controller.getProfile);
+app.get('/wishlist', UserAuth, controller.getWishList);
+app.post('/wishlist', UserAuth, controller.addToWishlist);
+app.delete('/wishlist/:id', UserAuth, controller.removeFromWishlist);
 
 mongoose.connect(DB_URL)
     .then(() => {

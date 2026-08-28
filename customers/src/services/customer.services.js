@@ -8,13 +8,10 @@ class CustomerService {
 
     async SignIn(userInputs) {
         const { email, password } = userInputs;
-
         try {
             const existingCustomer = await this.repository.FindCustomer({ email });
-
             if (existingCustomer) {
                 const validPassword = await ValidatePassword(password, existingCustomer.password, existingCustomer.salt);
-
                 if (validPassword) {
                     const token = await GenerateSignature({ email: existingCustomer.email, _id: existingCustomer._id });
                     return FormateData({ id: existingCustomer._id, token });
@@ -29,11 +26,9 @@ class CustomerService {
 
     async SignUp(userInputs) {
         const { email, password, phone } = userInputs;
-
         try {
             const salt = await GenerateSalt();
             const hashedPassword = await GeneratePassword(password, salt);
-
             const existingCustomer = await this.repository.CreateCustomer({ email, password: hashedPassword, phone, salt });
 
             const token = await GenerateSignature({ email: existingCustomer.email, _id: existingCustomer._id });
@@ -53,7 +48,7 @@ class CustomerService {
         }
     }
 
-    async GetProfile({ _id }) {
+    async GetProfile(_id) {
         try {
             const profile = await this.repository.GetProfile(_id);
             return FormateData(profile);
@@ -62,30 +57,39 @@ class CustomerService {
         }
     }
 
-    async GetShopingDetails(_id) {
-        try {
-            const profile = await this.repository.GetProfile(_id);
-            return FormateData({ cart: profile.cart, wishlist: profile.wishlist, orders: profile.orders });
-        } catch (err) {
-            throw new APIError('Data Not Found', 404, err.message);
-        }
-    }
-
     async GetWishList(_id) {
         try {
-            const wishlist = await this.repository.GetWishList(_id);
-            return FormateData(wishlist);
+            const wishlistIds = await this.repository.GetWishList(_id);
+
+            if (!wishlistIds || wishlistIds.length === 0) {
+                return FormateData([]);
+            }
+
+            const fullWishlist = [];
+
+            // Iteramos sobre los IDs para pedirle los datos completos al microservicio de productos
+            for (const productId of wishlistIds) {
+                try {
+                    const response = await fetch(`http://host.docker.internal:8000/${productId}`);
+                    if (response.ok) {
+                        const productData = await response.json();
+                        fullWishlist.push(productData);
+                    }
+                } catch (fetchErr) {
+                    console.error(`Error de red al buscar el producto ${productId}:`, fetchErr.message);
+                }
+            }
+
+            return FormateData(fullWishlist);
         } catch (err) {
             throw new APIError('Data Not Found', 404, err.message);
         }
     }
 
-    // Called by the products domain (src/api/products.js) — never reach into
-    // CustomerRepository directly from another domain, go through this service.
-    async AddToWishlist(_id, product) {
+    async AddToWishlist(_id, productId) {
         try {
-            const wishlist = await this.repository.AddToWishlist(_id, product);
-            return FormateData(wishlist);
+            const wishlistIds = await this.repository.AddToWishlist(_id, productId);
+            return FormateData(wishlistIds);
         } catch (err) {
             throw new APIError('Data Not Found', 404, err.message);
         }
@@ -93,50 +97,10 @@ class CustomerService {
 
     async RemoveFromWishlist(_id, productId) {
         try {
-            const wishlist = await this.repository.RemoveFromWishlist(_id, productId);
-            return FormateData(wishlist);
+            const wishlistIds = await this.repository.RemoveFromWishlist(_id, productId);
+            return FormateData(wishlistIds);
         } catch (err) {
             throw new APIError('Data Not Found', 404, err.message);
-        }
-    }
-
-    async AddToCart(_id, product, qty) {
-        try {
-            const cart = await this.repository.AddToCart(_id, product, qty);
-            return FormateData(cart);
-        } catch (err) {
-            throw new APIError('Data Not Found', 404, err.message);
-        }
-    }
-
-    async RemoveFromCart(_id, productId) {
-        try {
-            const cart = await this.repository.RemoveFromCart(_id, productId);
-            return FormateData(cart);
-        } catch (err) {
-            throw new APIError('Data Not Found', 404, err.message);
-        }
-    }
-
-    // Called by the shopping domain (src/api/shopping.js) — same boundary rule
-    // as wishlist/cart above: only through this service, never the repository.
-    async GetCart(_id) {
-        try {
-            const cart = await this.repository.GetCart(_id);
-            return FormateData(cart);
-        } catch (err) {
-            if (err instanceof APIError) throw err;
-            throw new APIError('Data Not Found', 404, err.message);
-        }
-    }
-
-    async PlaceOrder(_id, order) {
-        try {
-            const placedOrder = await this.repository.PlaceOrder(_id, order);
-            return FormateData(placedOrder);
-        } catch (err) {
-            if (err instanceof APIError) throw err;
-            throw new APIError('PlaceOrderError', 500, err.message);
         }
     }
 }
