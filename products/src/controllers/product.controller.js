@@ -20,22 +20,6 @@ class ProductController {
             next(err);
         }
     }
-
-    addToWishlist = async (req, res, next) => {
-        res.status(501).json({ message: "Pendiente: Lógica trasladada al API Gateway / Customer Service" });
-    }
-
-    removeFromWishlist = async (req, res, next) => {
-        res.status(501).json({ message: "Pendiente: Lógica trasladada al API Gateway / Customer Service" });
-    }
-
-    addToCart = async (req, res, next) => {
-        res.status(501).json({ message: "Pendiente: Lógica trasladada al API Gateway / Customer Service" });
-    }
-
-    removeFromCart = async (req, res, next) => {
-        res.status(501).json({ message: "Pendiente: Lógica trasladada al API Gateway / Customer Service" });
-    }
 }
 
 module.exports = ProductController;
