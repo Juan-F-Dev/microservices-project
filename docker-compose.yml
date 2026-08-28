@@ -1,43 +1,150 @@
 services:
+
+  # =========================
+  # GATEWAY
+  # =========================
+  gateway-service:
+    container_name: c-gateway
+    build:
+      context: ./gateway
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - CUSTOMER_URL=http://customer-service:8001
+      - PRODUCTS_URL=http://product-service:8002
+      - SHOPPING_URL=http://shopping-service:8003
+    depends_on:
+      - customer-service
+      - product-service
+      - shopping-service
+    networks:
+      - microservices-network
+
+
+  # =========================
+  # CUSTOMER
+  # =========================
   customer-service:
+    container_name: c-customer
     build:
       context: ./customers
+    restart: unless-stopped
     ports:
-      - "3001:3001"
+      - "8001:8001"
     environment:
-      - DB_URL=mongodb://mongodb-dev:27017/car_sales_db
-      - PORT=3001
+      - DB_URL=mongodb://customer-db:27017/customers
+      - PORT=8001
       - APP_SECRET=jg_secret_key_super_secreta_123
     depends_on:
-      - mongodb-dev
+      customer-db:
+        condition: service_healthy
+    networks:
+      - microservices-network
 
+  customer-db:
+    container_name: c-customer-db
+    image: mongo:7
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    ports:
+      - "27019:27017"
+    volumes:
+      - customer-data:/data/db
+    networks:
+      - microservices-network
+
+
+  # =========================
+  # PRODUCTS
+  # =========================
   product-service:
+    container_name: c-product
     build:
       context: ./products
+    restart: unless-stopped
     ports:
-      - "3002:3002"
+      - "8002:8002"
     environment:
-      - DB_URL=mongodb://mongodb-dev:27017/car_sales_db
-      - PORT=3002
+      - DB_URL=mongodb://product-db:27017/products
+      - PORT=8002
       - APP_SECRET=jg_secret_key_super_secreta_123
     depends_on:
-      - mongodb-dev
+      product-db:
+        condition: service_healthy
+    networks:
+      - microservices-network
 
+  product-db:
+    container_name: c-product-db
+    image: mongo:7
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    ports:
+      - "27020:27017"
+    volumes:
+      - product-data:/data/db
+    networks:
+      - microservices-network
+
+
+  # =========================
+  # SHOPPING
+  # =========================
   shopping-service:
+    container_name: c-shopping
     build:
       context: ./shopping
+    restart: unless-stopped
     ports:
-      - "3003:3003"
+      - "8003:8003"
     environment:
-      - PORT=3003
+      - DB_URL=mongodb://shopping-db:27017/shopping
+      - PORT=8003
       - APP_SECRET=jg_secret_key_super_secreta_123
+    depends_on:
+      shopping-db:
+        condition: service_healthy
+    networks:
+      - microservices-network
 
-  mongodb-dev:
-    image: mongo:latest
+  shopping-db:
+    container_name: c-shopping-db
+    image: mongo:7
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     ports:
-      - "27017:27017"
+      - "27021:27017"
     volumes:
-      - mongo-data:/data/db
+      - shopping-data:/data/db
+    networks:
+      - microservices-network
 
+
+# =========================
+# VOLUMES
+# =========================
 volumes:
-  mongo-data:
+  customer-data:
+  product-data:
+  shopping-data:
+
+networks:
+  microservices-network:
+    driver: bridge

@@ -15,6 +15,8 @@ services:
       depends_on:
         customer-db:
           condition: service_healthy
+      networks:
+        - microservices-network
 
   customer-db:
     container_name: c-customer-db
